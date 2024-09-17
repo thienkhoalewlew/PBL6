@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to My Shop{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to My Shop</h1>
+    <p class="lead">This is a simple e-commerce website built with Django.</p>
+    <hr class="my-4">
+    <p>Browse our products and start shopping today!</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'product_list' %}" role="button">View Products</a>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h2>Featured Products</h2>
+        <p>Check out our top picks for this week.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Special Offers</h2>
+        <p>Don't miss out on our current deals and discounts.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Customer Support</h2>
+        <p>Need help? Our support team is here for you.</p>
+    </div>
+</div>
+{% endblock %}

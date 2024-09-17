@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Products{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Our Products</h1>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for product in products %}
+    <div class="col">
+        <div class="card h-100">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+            {% else %}
+                <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Placeholder">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.description|truncatewords:20 }}</p>
+                <p class="card-text"><strong>Price: ${{ product.price }}</strong></p>
+                <a href="#" class="btn btn-primary">Add to Cart</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No products available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
