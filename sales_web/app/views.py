@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.views.decorators.csrf import requires_csrf_token
 
 def signup(request):
     if request.method == 'POST':
@@ -107,4 +108,8 @@ def edit_profile(request):
         'password_form': password_form
     })
 
-# Create your views here.
+@requires_csrf_token
+def csrf_failure(request, reason=""):
+    context = {'reason': reason}
+    return render(request, 'csrf_failure.html', context, status=403)
+
