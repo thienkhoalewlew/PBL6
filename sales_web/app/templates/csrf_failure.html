@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}CSRF Verification Failed{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-4">CSRF Verification Failed</h2>
+        <div class="alert alert-danger">
+            <p>Truy cập thất bại có thể vì:</p>
+            <ul>
+                <li>You're using an outdated link</li>
+                <li>Your browser's cookies are disabled</li>
+                <li>Your session has expired</li>
+            </ul>
+            <p>Please try refreshing the page or logging in again.</p>
+        </div>
+        <h2 class="mb-4">Còn nếu mày là hacker: á à định dùng csrf hả con, old school đấy nhưng gà điên</h2>
+        <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
+    </div>
+</div>
+{% endblock %}
