@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.views.decorators.csrf import requires_csrf_token
+from .models import Cart, CartItem, Product
 
 def signup(request):
     if request.method == 'POST':
@@ -113,3 +114,25 @@ def csrf_failure(request, reason=""):
     context = {'reason': reason}
     return render(request, 'csrf_failure.html', context, status=403)
 
+@login_required
+def cart_list(request):
+    cart = Cart.objects.filter(user=request.user).first()
+    total_price = sum(item.product.price * item.quantity for item in cart.cartitem_set.all())
+    return render(request, 'cart.html', {'cart': cart, 'total_price': total_price})
+
+@login_required
+def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    cart, created = Cart.objects.get_or_create(user=request.user)  # Lấy hoặc tạo giỏ hàng cho người dùng
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)  # Lấy hoặc tạo mục giỏ hàng
+    if not created: 
+        cart_item.quantity += 1  
+        cart_item.save() 
+    cart_item.save() 
+    return redirect('cart_list') 
+
+def remove_from_cart(request, product_id):
+    cart = get_object_or_404(Cart, user=request.user)
+    cart_item = get_object_or_404(CartItem, cart = cart, product_id = product_id)
+    cart_item.delete()
+    return redirect('cart_list')

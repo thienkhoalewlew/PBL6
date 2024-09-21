@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Your Cart{% endblock %}
+{% block content %}
+<h1>Your Cart</h1>
+<ul class="list-group">
+    {% if cart %}
+        {% for item in cart.cartitem_set.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; margin-right: 10px;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/50" alt="Placeholder" style="width: 50px; height: 50px; margin-right: 10px;">
+                    {% endif %}
+                    <div>
+                        <h5>{{ item.product.name }}</h5>
+                        <p>Price: ${{ item.product.price }}</p>
+                        <p>Quantity: {{ item.quantity }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'remove_from_cart' item.product.id %}" class="btn btn-danger btn-sm">Remove</a>
+            </li>
+        {% endfor %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <strong>Total Price:</strong>
+            <span>${{ total_price }}</span>
+        </li>
+    {% else %}
+        <li class="list-group-item">Your cart is empty.</li>
+    {% endif %}
+    <li class="list-group-item text-center">
+        <a href="{#}" class="btn btn-success">Proceed to Checkout</a>
+    </li>
+</ul>
+{% endblock %}
