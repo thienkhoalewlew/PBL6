@@ -36,6 +36,11 @@ LOGGING = {
             'style': '{',
         },
     },
+    'filters': {
+        'remove_autoreload': {
+            '()': 'sales_web.logging_filters.RemoveAutoreloadFilter',
+        },
+    },
     'handlers': {
         'file': {
             'level': 'DEBUG',

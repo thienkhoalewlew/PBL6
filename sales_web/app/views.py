@@ -131,6 +131,7 @@ def add_to_cart(request, product_id):
     cart_item.save() 
     return redirect('cart_list') 
 
+@login_required
 def remove_from_cart(request, product_id):
     cart = get_object_or_404(Cart, user=request.user)
     cart_item = get_object_or_404(CartItem, cart = cart, product_id = product_id)
