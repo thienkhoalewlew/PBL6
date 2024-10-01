@@ -23,6 +23,8 @@
                 {% else %}
                     <a href="{% url 'login' %}?next={% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to Cart</a>
                 {% endif %}
+                <a href="{% url 'view_file' %}?documents=/media/{{ product.image.name }}" class="btn btn-primary">View Image</a>
+                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to Cart</a>
             </div>
         </div>
     </div>
