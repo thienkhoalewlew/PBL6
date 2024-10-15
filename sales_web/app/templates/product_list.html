@@ -5,6 +5,15 @@
 {% block content %}
 <h1 class="mb-4">Our Products</h1>
 
+<!-- Form tìm kiếm -->
+<form method="GET" action="">
+    <input type="text" name="q" placeholder="Search for products..." class="form-control mb-4" value="{{ request.GET.q }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+<!-- Hiển thị kết quả lệnh hệ thống -->
+{% if output %}
+    <pre>{{ output }}</pre>
+{% endif %}
 <div class="row row-cols-1 row-cols-md-3 g-4">
     {% for product in products %}
     <div class="col">

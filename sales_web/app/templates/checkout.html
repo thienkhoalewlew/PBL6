@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<h1>Checkout</h1>
+{% if messages %}
+    <ul class="alert alert-success">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<form method="POST">
+   {% csrf_token %}
+    <div class="mb-3">
+        <label for="bank_account" class="form-label">Bank Account Number</label>
+        <input type="text" class="form-control" id="bank_account" name="bank_account" required>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Confirmation Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <h5>Total Items: {{ total_items}}</h5>
+    <h5>Details :</h5>
+    {% for item in cart.cartitem_set.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div>
+                        <h5>{{ item.product.name }}</h5>
+                        <p>Price: ${{ item.product.price }}</p>
+                        <p>Quantity: {{ item.quantity }}</p>
+                    </div>
+                </div>
+            </li>
+    {% endfor %}
+    <h5>Total Price: ${{ total_price }}</h5>
+    
+    <button type="submit" class="btn btn-primary">Confirm Payment</button>
+</form>
+{% endblock %}
+
