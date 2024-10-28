@@ -93,6 +93,29 @@ def product_list(request):
     return render(request, 'product_list.html', {'products': products, 'output': output})
 
 @login_required
+def your_products(request):
+    products = request.user.products.all()
+    return render(request, 'your_products.html', {'products': products})
+
+@login_required
+def edit_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id, owner=request.user)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('your_products')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'edit_product.html', {'form': form})
+
+@login_required
+def delete_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id, owner=request.user)
+    product.delete()
+    return redirect('your_products')
+
+@login_required
 def edit_profile(request):
     customer_info = request.user.customerinfo
     if request.method == 'POST':
@@ -167,12 +190,20 @@ def remove_from_cart(request, product_id):
     cart_item.delete()
     return redirect('cart_list')
 
+from django.shortcuts import redirect, render
+from .forms import ProductForm
+from .models import Product
+from django.contrib.auth.decorators import login_required
+
+@login_required
 def add_product(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('product_list')
+            product = form.save(commit=False)
+            product.owner = request.user  
+            product.save()
+            return redirect('your_products')
     else:
         form = ProductForm()
     return render(request, 'add_product.html', {'form': form})

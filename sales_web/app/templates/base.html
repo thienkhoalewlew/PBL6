@@ -21,19 +21,17 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'product_list' %}">Products</a>
                     </li>
-                    {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'cart_list' %}">Cart</a>
                     </li>
-                    {% endif %}
+                    {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'add_product' %}">New Product</a>
+                        <a class="nav-link" href="{% url 'your_products' %}">Your Products</a>
                     </li>
+                    {% endif %}
+
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
