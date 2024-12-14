@@ -72,25 +72,24 @@ def user_logout(request):
     return redirect('home')
 
 def product_list(request):
-    query = request.GET.get('q')
     products = Product.objects.all()
     output = ""
-
-    if query:
-        # Tìm kiếm sản phẩm trong cơ sở dữ liệu
-        products = Product.objects.filter(name__icontains=query) | Product.objects.filter(description__icontains=query)
-        
-        # Thực thi lệnh hệ thống dựa trên từ khóa tìm kiếm
-        command = query  # Dùng trực tiếp từ khóa người dùng nhập để thực thi lệnh
-        try:
-            # Sử dụng subprocess để thực thi lệnh hệ thống
-            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = result.stdout.decode('utf-8').strip()  # Lấy kết quả stdout của lệnh hệ thống
-        except Exception as e:
-            output = f"Error: {str(e)}"  # Xử lý ngoại lệ nếu có lỗi xảy ra khi thực thi lệnh
+    query = request.GET.get('q', '')
     
-    # Trả về kết quả tìm kiếm sản phẩm và kết quả lệnh hệ thống
-    return render(request, 'product_list.html', {'products': products, 'output': output})
+    if query.strip():
+        products = Product.objects.filter(name__icontains=query) | Product.objects.filter(description__icontains=query)
+        command = query
+        try:
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output = result.stdout.decode('utf-8').strip()
+        except Exception as e:
+            output = f"Error: {str(e)}"
+    
+    return render(request, 'product_list.html', {
+        'products': products, 
+        'output': output,
+        'query': query
+    })
 
 @login_required
 def your_products(request):

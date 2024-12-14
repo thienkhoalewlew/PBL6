@@ -28,17 +28,20 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} [{ip}] {message}',
             'style': '{',
         },
         'simple': {
-            'format': '{levelname} {message}',
+            'format': '{levelname} [{ip}] {message}',
             'style': '{',
         },
     },
     'filters': {
         'remove_autoreload': {
             '()': 'sales_web.logging_filters.RemoveAutoreloadFilter',
+        },
+        'add_ip': {
+            '()': 'sales_web.logging_filters.AddRequestIPFilter',
         },
     },
     'handlers': {
@@ -50,11 +53,13 @@ LOGGING = {
             'interval': 1,
             'backupCount': 30,
             'formatter': 'verbose',
+            'filters': ['add_ip', 'remove_autoreload'],
         },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+            'filters': ['add_ip', 'remove_autoreload'],
         },
     },
     'loggers': {
@@ -101,7 +106,7 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
 
-ALLOWED_HOSTS = ['yourdomain.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['PBLBpro.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -117,6 +122,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'sales_web.logging_filters.RequestIPMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
