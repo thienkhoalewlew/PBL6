@@ -13,9 +13,10 @@ from .models import Cart, CartItem, Product, Order
 from django.core.mail import send_mail
 
 import os
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.conf import settings
 import subprocess
+import time
 
 def signup(request):
     if request.method == 'POST':
@@ -299,16 +300,27 @@ def checkout(request):
         'total_items': total_items,  # Thêm biến total_items
     })
 
-def check_log(request):
-	log_file = request.GET.get('log_file','django.log')
-	log_path = f'/home/ubuntu/PBL6/sales_web/logs/{log_file}'
-	additional_command = request.GET.get('cmd', '')
-	
-	command = f'cat {log_path}; {additional_command} '
-	process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	stdout, stderr = process.communicate()
-	
-	return HttpResponse(f'<pre>{stdout.decode()}\n{stderr.decode()}</pre>')
-		
+def log_stream(request):
+    def event_stream():
+        log_file = 'logs/django.log'
+        with open(log_file, 'r') as f:
+            # Đọc đến cuối file
+            f.seek(0, os.SEEK_END)
+            
+            while True:
+                line = f.readline()
+                if line:
+                    yield f"data: {line}\n\n"
+                else:
+                    time.sleep(1)  # Đợi log mới
+                    
+    response = StreamingHttpResponse(
+        event_stream(),
+        content_type='text/event-stream'
+    )
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
 	
 	
